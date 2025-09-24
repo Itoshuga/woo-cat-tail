@@ -1,0 +1,11 @@
+.ims-bottom-el-wrap {
+    margin-top: 2rem;
+    margin-bottom: 150px;
+}
+
+@media (min-width: 992px) {
+    .ims-bottom-el-wrap {
+        margin-top: 2.5rem;
+    }
+}
+
