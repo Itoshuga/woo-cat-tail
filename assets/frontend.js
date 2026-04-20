@@ -1,55 +1,80 @@
-(function(){
-  function onReady(fn){
-    if(document.readyState !== 'loading'){ fn(); }
-    else { document.addEventListener('DOMContentLoaded', fn); }
+(function () {
+  function onReady(fn) {
+    if (document.readyState !== "loading") {
+      fn();
+    } else {
+      document.addEventListener("DOMContentLoaded", fn);
+    }
   }
 
-  function moveWrap(){
-    var wrap = document.getElementById('ims-bottom-el-wrap');
-    if(!wrap) return false;
+  function getConfig(slot) {
+    var cfg = window.CatTailConfig || {};
 
-    var selector = (window.CatTailConfig && CatTailConfig.selector) || '.content-wrapper';
-    var position = (window.CatTailConfig && CatTailConfig.position) || 'afterend';
-    var target = document.querySelector(selector);
+    if (slot === "top") {
+      return {
+        id: "ims-top-el-wrap",
+        selector: cfg.top_selector || cfg.selector || ".content-wrapper",
+        position: cfg.top_position || "beforebegin",
+      };
+    }
 
-    if(target && target.parentNode){
-      try{
-        // évite de déplacer 50x
-        if(!wrap.dataset.moved){
-          target.insertAdjacentElement(position, wrap);
-          wrap.dataset.moved = '1';
-        }
+    return {
+      id: "ims-bottom-el-wrap",
+      selector: cfg.bottom_selector || cfg.selector || ".content-wrapper",
+      position: cfg.bottom_position || cfg.position || "afterend",
+    };
+  }
+
+  function moveSlotWrap(slot) {
+    var conf = getConfig(slot);
+    var wrap = document.getElementById(conf.id);
+
+    // Nothing to move for this slot.
+    if (!wrap) return true;
+    if (wrap.dataset.moved) return true;
+
+    var target = document.querySelector(conf.selector);
+    if (!target || !target.parentNode) return false;
+
+    try {
+      target.insertAdjacentElement(conf.position, wrap);
+      wrap.dataset.moved = "1";
+      return true;
+    } catch (e) {
+      try {
+        target.insertAdjacentElement("afterend", wrap);
+        wrap.dataset.moved = "1";
         return true;
-      }catch(e){
-        try{
-          target.insertAdjacentElement('afterend', wrap);
-          wrap.dataset.moved = '1';
-          return true;
-        }catch(_) {}
+      } catch (_) {
+        return false;
       }
     }
-    return false;
   }
 
-  onReady(function(){
-    // 1) tentative immédiate
-    if (moveWrap()) return;
+  function moveAllWraps() {
+    var topOk = moveSlotWrap("top");
+    var bottomOk = moveSlotWrap("bottom");
+    return topOk && bottomOk;
+  }
 
-    // 2) petites tentatives espacées (pour les thèmes lents)
+  onReady(function () {
+    if (moveAllWraps()) return;
+
     var tries = 0;
-    var iv = setInterval(function(){
+    var iv = setInterval(function () {
       tries++;
-      if (moveWrap() || tries >= 10) clearInterval(iv);
+      if (moveAllWraps() || tries >= 10) {
+        clearInterval(iv);
+      }
     }, 200);
 
-    // 3) MutationObserver : si le conteneur arrive plus tard, on bouge alors
-    try{
-      var mo = new MutationObserver(function(){
-        if (moveWrap()){
+    try {
+      var mo = new MutationObserver(function () {
+        if (moveAllWraps()) {
           mo.disconnect();
         }
       });
-      mo.observe(document.documentElement, {childList:true, subtree:true});
-    }catch(_){}
+      mo.observe(document.documentElement, { childList: true, subtree: true });
+    } catch (_) {}
   });
 })();

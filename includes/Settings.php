@@ -9,11 +9,18 @@ class Settings {
 
     public static function defaults(): array {
         return [
+            // Top slot
+            'top_insertion_selector'    => '.content-wrapper',
+            'top_insertion_position'    => 'beforebegin', // afterend|beforebegin|afterbegin|beforeend
+            'top_margin_bottom_mobile'  => 24,
+            'top_margin_bottom_desktop' => 32,
+
+            // Bottom slot
             'insertion_selector' => '.content-wrapper',
             'insertion_position' => 'afterend', // afterend|beforebegin|afterbegin|beforeend
             'margin_bottom'      => 150,
-            'margin_top_mobile'  => 32,  // 2rem ≈ 32px
-            'margin_top_desktop' => 40,  // 2.5rem ≈ 40px
+            'margin_top_mobile'  => 32,
+            'margin_top_desktop' => 40,
         ];
     }
 
@@ -25,7 +32,7 @@ class Settings {
     public function __construct() {
         add_action('admin_menu', [$this, 'add_menu']);
         add_action('admin_init', [$this, 'register_settings']);
-        add_action('admin_enqueue_scripts', [$this, 'enqueue_assets']); // +++
+        add_action('admin_enqueue_scripts', [$this, 'enqueue_assets']);
     }
 
     public function add_menu() {
@@ -35,7 +42,7 @@ class Settings {
             'manage_options',
             'woo-cat-tail',
             [$this, 'render_page'],
-            'dashicons-pets', // 🐾 style animal
+            'dashicons-pets',
             56
         );
     }
@@ -46,156 +53,115 @@ class Settings {
             'sanitize_callback' => [$this, 'sanitize'],
             'default'           => self::defaults(),
         ]);
-
-        add_settings_section('cat_tail_main', '', '__return_false', 'woo-cat-tail');
-
-        add_settings_field('insertion_selector', __('Sélecteur d’insertion', 'cat-tail'),
-            [$this, 'field_selector'], 'woo-cat-tail', 'cat_tail_main');
-
-        add_settings_field('insertion_position', __('Position', 'cat-tail'),
-            [$this, 'field_position'], 'woo-cat-tail', 'cat_tail_main');
-
-        add_settings_field('margin_bottom', __('Margin bottom (px)', 'cat-tail'),
-            [$this, 'field_margin_bottom'], 'woo-cat-tail', 'cat_tail_main');
-
-        add_settings_field('margins_top', __('Margins top (px)', 'cat-tail'),
-            [$this, 'field_margins_top'], 'woo-cat-tail', 'cat_tail_main');
     }
 
     public function sanitize($input) {
         $out = self::defaults();
 
+        $allowed_pos = ['afterend', 'beforebegin', 'afterbegin', 'beforeend'];
+
+        $out['top_insertion_selector'] = isset($input['top_insertion_selector'])
+            ? sanitize_text_field($input['top_insertion_selector'])
+            : $out['top_insertion_selector'];
+
+        $top_pos = isset($input['top_insertion_position']) ? sanitize_text_field($input['top_insertion_position']) : '';
+        $out['top_insertion_position'] = in_array($top_pos, $allowed_pos, true) ? $top_pos : $out['top_insertion_position'];
+
         $out['insertion_selector'] = isset($input['insertion_selector'])
-            ? sanitize_text_field($input['insertion_selector']) : $out['insertion_selector'];
+            ? sanitize_text_field($input['insertion_selector'])
+            : $out['insertion_selector'];
 
-        $allowed_pos = ['afterend','beforebegin','afterbegin','beforeend'];
-        $pos = isset($input['insertion_position']) ? sanitize_text_field($input['insertion_position']) : '';
-        $out['insertion_position'] = in_array($pos, $allowed_pos, true) ? $pos : $out['insertion_position'];
+        $bottom_pos = isset($input['insertion_position']) ? sanitize_text_field($input['insertion_position']) : '';
+        $out['insertion_position'] = in_array($bottom_pos, $allowed_pos, true) ? $bottom_pos : $out['insertion_position'];
 
-        $out['margin_bottom']      = isset($input['margin_bottom']) ? intval($input['margin_bottom']) : $out['margin_bottom'];
-        $out['margin_top_mobile']  = isset($input['margin_top_mobile']) ? intval($input['margin_top_mobile']) : $out['margin_top_mobile'];
-        $out['margin_top_desktop'] = isset($input['margin_top_desktop']) ? intval($input['margin_top_desktop']) : $out['margin_top_desktop'];
+        $out['top_margin_bottom_mobile']  = isset($input['top_margin_bottom_mobile']) ? max(0, (int) $input['top_margin_bottom_mobile']) : $out['top_margin_bottom_mobile'];
+        $out['top_margin_bottom_desktop'] = isset($input['top_margin_bottom_desktop']) ? max(0, (int) $input['top_margin_bottom_desktop']) : $out['top_margin_bottom_desktop'];
+        $out['margin_bottom']             = isset($input['margin_bottom']) ? max(0, (int) $input['margin_bottom']) : $out['margin_bottom'];
+        $out['margin_top_mobile']         = isset($input['margin_top_mobile']) ? max(0, (int) $input['margin_top_mobile']) : $out['margin_top_mobile'];
+        $out['margin_top_desktop']        = isset($input['margin_top_desktop']) ? max(0, (int) $input['margin_top_desktop']) : $out['margin_top_desktop'];
 
         return $out;
     }
 
-    // ---- Fields renderers ----
-    public function field_selector() {
-        $o = self::get_options(); ?>
-        <input type="text" class="regular-text" name="<?php echo esc_attr(self::OPTION_KEY); ?>[insertion_selector]"
-               value="<?php echo esc_attr($o['insertion_selector']); ?>" placeholder=".content-wrapper">
-        <p class="description"><?php esc_html_e('Ex: .content-wrapper, #main, .site-inner', 'cat-tail'); ?></p>
-        <?php
-    }
-
-    public function field_position() {
-        $o = self::get_options();
-        $opts = ['afterend'=>'afterend','beforebegin'=>'beforebegin','afterbegin'=>'afterbegin','beforeend'=>'beforeend']; ?>
-        <select name="<?php echo esc_attr(self::OPTION_KEY); ?>[insertion_position]">
-            <?php foreach($opts as $val=>$label): ?>
-                <option value="<?php echo esc_attr($val); ?>" <?php selected($o['insertion_position'],$val); ?>>
-                    <?php echo esc_html($label); ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
-        <p class="description"><?php esc_html_e('Méthode utilisée par insertAdjacentElement.', 'cat-tail'); ?></p>
-        <?php
-    }
-
-    public function field_margin_bottom() {
-        $o = self::get_options(); ?>
-        <input type="number" min="0" step="1" style="width:120px"
-               name="<?php echo esc_attr(self::OPTION_KEY); ?>[margin_bottom]"
-               value="<?php echo esc_attr($o['margin_bottom']); ?>"> px
-        <?php
-    }
-
-    public function field_margins_top() {
-        $o = self::get_options(); ?>
-        <label>
-            <?php esc_html_e('Mobile', 'cat-tail'); ?>:
-            <input type="number" min="0" step="1" style="width:100px"
-                   name="<?php echo esc_attr(self::OPTION_KEY); ?>[margin_top_mobile]"
-                   value="<?php echo esc_attr($o['margin_top_mobile']); ?>"> px
-        </label>
-        &nbsp;&nbsp;
-        <label>
-            <?php esc_html_e('Desktop (≥992px)', 'cat-tail'); ?>:
-            <input type="number" min="0" step="1" style="width:100px"
-                   name="<?php echo esc_attr(self::OPTION_KEY); ?>[margin_top_desktop]"
-                   value="<?php echo esc_attr($o['margin_top_desktop']); ?>"> px
-        </label>
-        <?php
-    }
-
-    public function enqueue_assets($hook){
-        // ID d'écran de la page top-level : "toplevel_page_woo-cat-tail"
+    public function enqueue_assets($hook) {
         $screen = function_exists('get_current_screen') ? get_current_screen() : null;
         if (!$screen || $screen->id !== 'toplevel_page_woo-cat-tail') return;
-    
-        // On réutilise le CSS admin Bento
+
         wp_enqueue_style('cat-tail-admin', CAT_TAIL_URL . 'assets/admin.css', [], CAT_TAIL_VERSION);
-    
-        // Un léger style spécifique Settings (facultatif)
-        $extra = '
-          .ims-settings .ims-card + .ims-card{ margin-top:16px; }
-          .ims-form-row{ display:flex; align-items:center; gap:12px; margin:10px 0; }
-          .ims-form-row .regular-text{ width:420px; max-width:100%; }
-          .ims-field-help{ margin-top:4px; color:#6b7280; }
-          .ims-sublabel{ color:#6b7280; margin-right:8px; }
-          .ims-number{ width:120px; }
-          @media (max-width:782px){ .ims-form-row{ flex-direction:column; align-items:flex-start; } .ims-number{ width:160px; } }
-        ';
-        wp_add_inline_style('cat-tail-admin', $extra);
     }
 
     public function render_page() {
         if (!current_user_can('manage_options')) return;
-    
+
         $o = self::get_options();
-        $pos = ['afterend'=>'afterend','beforebegin'=>'beforebegin','afterbegin'=>'afterbegin','beforeend'=>'beforeend'];
+        $pos = ['afterend' => 'afterend', 'beforebegin' => 'beforebegin', 'afterbegin' => 'afterbegin', 'beforeend' => 'beforeend'];
         ?>
         <div class="wrap ims-settings">
           <h1>Woo Cat Tail</h1>
-    
+
           <form method="post" action="options.php">
             <?php settings_fields(self::OPTION_KEY); ?>
-    
+
             <div class="ims-card">
               <div class="ims-card__header">
                 <div class="ims-card__title">
                   <span class="ims-icon" aria-hidden="true">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="6" rx="2" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="10" width="18" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/></svg>
                   </span>
-                  Paramètres d’insertion
+                  Parametres d'insertion
                 </div>
               </div>
               <div class="ims-card__body">
-    
-                <div class="ims-form-row">
-                  <label for="cat_tail_selector" class="ims-sublabel">Sélecteur d’insertion</label>
-                  <input id="cat_tail_selector" type="text" class="regular-text"
-                         name="<?php echo esc_attr(self::OPTION_KEY); ?>[insertion_selector]"
-                         value="<?php echo esc_attr($o['insertion_selector']); ?>"
-                         placeholder=".content-wrapper">
+                <p class="ims-section-label">Bloc haut</p>
+                <div class="ims-subgrid">
+                  <div class="ims-mini-card">
+                    <label class="ims-mini-card__label" for="cat_tail_top_selector">Selecteur d'insertion</label>
+                    <input id="cat_tail_top_selector" type="text" class="regular-text ims-control"
+                           name="<?php echo esc_attr(self::OPTION_KEY); ?>[top_insertion_selector]"
+                           value="<?php echo esc_attr($o['top_insertion_selector']); ?>"
+                           placeholder=".content-wrapper">
+                    <p class="ims-mini-card__help">Ex : <code>.content-wrapper</code>, <code>#main</code>, <code>.site-inner</code></p>
+                  </div>
+
+                  <div class="ims-mini-card">
+                    <label class="ims-mini-card__label" for="cat_tail_top_position">Position</label>
+                    <select id="cat_tail_top_position" class="ims-control" name="<?php echo esc_attr(self::OPTION_KEY); ?>[top_insertion_position]">
+                      <?php foreach ($pos as $val => $label): ?>
+                        <option value="<?php echo esc_attr($val); ?>" <?php selected($o['top_insertion_position'], $val); ?>>
+                          <?php echo esc_html($label); ?>
+                        </option>
+                      <?php endforeach; ?>
+                    </select>
+                    <p class="ims-mini-card__help">Methode utilisee par <code>insertAdjacentElement</code>.</p>
+                  </div>
                 </div>
-                <p class="ims-field-help">Ex : <code>.content-wrapper</code>, <code>#main</code>, <code>.site-inner</code></p>
-    
-                <div class="ims-form-row">
-                  <label for="cat_tail_position" class="ims-sublabel">Position</label>
-                  <select id="cat_tail_position" name="<?php echo esc_attr(self::OPTION_KEY); ?>[insertion_position]">
-                    <?php foreach($pos as $val => $label): ?>
-                      <option value="<?php echo esc_attr($val); ?>" <?php selected($o['insertion_position'], $val); ?>>
-                        <?php echo esc_html($label); ?>
-                      </option>
-                    <?php endforeach; ?>
-                  </select>
+
+                <p class="ims-section-label">Bloc bas</p>
+                <div class="ims-subgrid">
+                  <div class="ims-mini-card">
+                    <label class="ims-mini-card__label" for="cat_tail_bottom_selector">Selecteur d'insertion</label>
+                    <input id="cat_tail_bottom_selector" type="text" class="regular-text ims-control"
+                           name="<?php echo esc_attr(self::OPTION_KEY); ?>[insertion_selector]"
+                           value="<?php echo esc_attr($o['insertion_selector']); ?>"
+                           placeholder=".content-wrapper">
+                    <p class="ims-mini-card__help">Ex : <code>.content-wrapper</code>, <code>#main</code>, <code>.site-inner</code></p>
+                  </div>
+
+                  <div class="ims-mini-card">
+                    <label class="ims-mini-card__label" for="cat_tail_bottom_position">Position</label>
+                    <select id="cat_tail_bottom_position" class="ims-control" name="<?php echo esc_attr(self::OPTION_KEY); ?>[insertion_position]">
+                      <?php foreach ($pos as $val => $label): ?>
+                        <option value="<?php echo esc_attr($val); ?>" <?php selected($o['insertion_position'], $val); ?>>
+                          <?php echo esc_html($label); ?>
+                        </option>
+                      <?php endforeach; ?>
+                    </select>
+                    <p class="ims-mini-card__help">Methode utilisee par <code>insertAdjacentElement</code>.</p>
+                  </div>
                 </div>
-                <p class="ims-field-help">Méthode utilisée par <code>insertAdjacentElement</code>.</p>
-    
               </div>
             </div>
-    
+
             <div class="ims-card ims-card--muted">
               <div class="ims-card__header">
                 <div class="ims-card__title">
@@ -206,33 +172,46 @@ class Settings {
                 </div>
               </div>
               <div class="ims-card__body">
-    
-                <div class="ims-form-row">
-                  <label for="cat_tail_mb" class="ims-sublabel">Margin bottom (px)</label>
-                  <input id="cat_tail_mb" type="number" min="0" step="1" class="ims-number"
-                         name="<?php echo esc_attr(self::OPTION_KEY); ?>[margin_bottom]"
-                         value="<?php echo esc_attr($o['margin_bottom']); ?>"> px
+                <p class="ims-section-label">Bloc haut</p>
+                <div class="ims-subgrid ims-subgrid--compact">
+                  <div class="ims-mini-card">
+                    <label class="ims-mini-card__label" for="cat_tail_top_margin_mobile">Margin bottom mobile (px)</label>
+                    <input id="cat_tail_top_margin_mobile" type="number" min="0" step="1" class="ims-control"
+                           name="<?php echo esc_attr(self::OPTION_KEY); ?>[top_margin_bottom_mobile]"
+                           value="<?php echo esc_attr($o['top_margin_bottom_mobile']); ?>">
+                  </div>
+                  <div class="ims-mini-card">
+                    <label class="ims-mini-card__label" for="cat_tail_top_margin_desktop">Margin bottom desktop (px)</label>
+                    <input id="cat_tail_top_margin_desktop" type="number" min="0" step="1" class="ims-control"
+                           name="<?php echo esc_attr(self::OPTION_KEY); ?>[top_margin_bottom_desktop]"
+                           value="<?php echo esc_attr($o['top_margin_bottom_desktop']); ?>">
+                  </div>
                 </div>
-    
-                <div class="ims-form-row">
-                  <span class="ims-sublabel">Margins top (px)</span>
-                  <label>
-                    Mobile :
-                    <input type="number" min="0" step="1" class="ims-number"
+
+                <p class="ims-section-label">Bloc bas</p>
+                <div class="ims-subgrid ims-subgrid--compact">
+                  <div class="ims-mini-card">
+                    <label class="ims-mini-card__label" for="cat_tail_mb">Margin bottom (px)</label>
+                    <input id="cat_tail_mb" type="number" min="0" step="1" class="ims-control"
+                           name="<?php echo esc_attr(self::OPTION_KEY); ?>[margin_bottom]"
+                           value="<?php echo esc_attr($o['margin_bottom']); ?>">
+                  </div>
+                  <div class="ims-mini-card">
+                    <label class="ims-mini-card__label" for="cat_tail_bottom_margin_mobile">Margin top mobile (px)</label>
+                    <input id="cat_tail_bottom_margin_mobile" type="number" min="0" step="1" class="ims-control"
                            name="<?php echo esc_attr(self::OPTION_KEY); ?>[margin_top_mobile]"
-                           value="<?php echo esc_attr($o['margin_top_mobile']); ?>"> px
-                  </label>
-                  <label>
-                    Desktop (≥992px) :
-                    <input type="number" min="0" step="1" class="ims-number"
+                           value="<?php echo esc_attr($o['margin_top_mobile']); ?>">
+                  </div>
+                  <div class="ims-mini-card">
+                    <label class="ims-mini-card__label" for="cat_tail_bottom_margin_desktop">Margin top desktop (px)</label>
+                    <input id="cat_tail_bottom_margin_desktop" type="number" min="0" step="1" class="ims-control"
                            name="<?php echo esc_attr(self::OPTION_KEY); ?>[margin_top_desktop]"
-                           value="<?php echo esc_attr($o['margin_top_desktop']); ?>"> px
-                  </label>
+                           value="<?php echo esc_attr($o['margin_top_desktop']); ?>">
+                  </div>
                 </div>
-    
               </div>
             </div>
-    
+
             <div style="margin-top:16px;">
               <?php submit_button(__('Enregistrer', 'cat-tail')); ?>
             </div>

@@ -1,11 +1,22 @@
-.ims-bottom-el-wrap {
+.ims-cat-tail-wrap {
+    width: 100%;
+}
+
+.ims-cat-tail-wrap--top {
+    margin-bottom: 24px;
+}
+
+.ims-cat-tail-wrap--bottom {
     margin-top: 2rem;
     margin-bottom: 150px;
 }
 
 @media (min-width: 992px) {
-    .ims-bottom-el-wrap {
+    .ims-cat-tail-wrap--top {
+        margin-bottom: 32px;
+    }
+
+    .ims-cat-tail-wrap--bottom {
         margin-top: 2.5rem;
     }
 }
-
