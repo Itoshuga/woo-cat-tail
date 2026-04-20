@@ -37,8 +37,8 @@ class Settings {
 
     public function add_menu() {
         add_menu_page(
-            __('Woo Cat Tail', 'cat-tail'),
-            __('Woo Cat Tail', 'cat-tail'),
+            I18n::t('plugin_name'),
+            I18n::t('plugin_name'),
             'manage_options',
             'woo-cat-tail',
             [$this, 'render_page'],
@@ -97,7 +97,7 @@ class Settings {
         $pos = ['afterend' => 'afterend', 'beforebegin' => 'beforebegin', 'afterbegin' => 'afterbegin', 'beforeend' => 'beforeend'];
         ?>
         <div class="wrap ims-settings">
-          <h1>Woo Cat Tail</h1>
+          <h1><?php echo esc_html(I18n::t('plugin_name')); ?></h1>
 
           <form method="post" action="options.php">
             <?php settings_fields(self::OPTION_KEY); ?>
@@ -108,23 +108,23 @@ class Settings {
                   <span class="ims-icon" aria-hidden="true">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="6" rx="2" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="10" width="18" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/></svg>
                   </span>
-                  Parametres d'insertion
+                  <?php echo esc_html(I18n::t('settings_insertion_title')); ?>
                 </div>
               </div>
               <div class="ims-card__body">
-                <p class="ims-section-label">Bloc haut</p>
+                <p class="ims-section-label"><?php echo esc_html(I18n::t('slot_top')); ?></p>
                 <div class="ims-subgrid">
                   <div class="ims-mini-card">
-                    <label class="ims-mini-card__label" for="cat_tail_top_selector">Selecteur d'insertion</label>
+                    <label class="ims-mini-card__label" for="cat_tail_top_selector"><?php echo esc_html(I18n::t('selector_label')); ?></label>
                     <input id="cat_tail_top_selector" type="text" class="regular-text ims-control"
                            name="<?php echo esc_attr(self::OPTION_KEY); ?>[top_insertion_selector]"
                            value="<?php echo esc_attr($o['top_insertion_selector']); ?>"
                            placeholder=".content-wrapper">
-                    <p class="ims-mini-card__help">Ex : <code>.content-wrapper</code>, <code>#main</code>, <code>.site-inner</code></p>
+                    <p class="ims-mini-card__help"><?php echo esc_html(I18n::t('selector_help')); ?></p>
                   </div>
 
                   <div class="ims-mini-card">
-                    <label class="ims-mini-card__label" for="cat_tail_top_position">Position</label>
+                    <label class="ims-mini-card__label" for="cat_tail_top_position"><?php echo esc_html(I18n::t('position')); ?></label>
                     <select id="cat_tail_top_position" class="ims-control" name="<?php echo esc_attr(self::OPTION_KEY); ?>[top_insertion_position]">
                       <?php foreach ($pos as $val => $label): ?>
                         <option value="<?php echo esc_attr($val); ?>" <?php selected($o['top_insertion_position'], $val); ?>>
@@ -132,23 +132,23 @@ class Settings {
                         </option>
                       <?php endforeach; ?>
                     </select>
-                    <p class="ims-mini-card__help">Methode utilisee par <code>insertAdjacentElement</code>.</p>
+                    <p class="ims-mini-card__help"><?php echo esc_html(I18n::t('position_help')); ?></p>
                   </div>
                 </div>
 
-                <p class="ims-section-label">Bloc bas</p>
+                <p class="ims-section-label"><?php echo esc_html(I18n::t('slot_bottom')); ?></p>
                 <div class="ims-subgrid">
                   <div class="ims-mini-card">
-                    <label class="ims-mini-card__label" for="cat_tail_bottom_selector">Selecteur d'insertion</label>
+                    <label class="ims-mini-card__label" for="cat_tail_bottom_selector"><?php echo esc_html(I18n::t('selector_label')); ?></label>
                     <input id="cat_tail_bottom_selector" type="text" class="regular-text ims-control"
                            name="<?php echo esc_attr(self::OPTION_KEY); ?>[insertion_selector]"
                            value="<?php echo esc_attr($o['insertion_selector']); ?>"
                            placeholder=".content-wrapper">
-                    <p class="ims-mini-card__help">Ex : <code>.content-wrapper</code>, <code>#main</code>, <code>.site-inner</code></p>
+                    <p class="ims-mini-card__help"><?php echo esc_html(I18n::t('selector_help')); ?></p>
                   </div>
 
                   <div class="ims-mini-card">
-                    <label class="ims-mini-card__label" for="cat_tail_bottom_position">Position</label>
+                    <label class="ims-mini-card__label" for="cat_tail_bottom_position"><?php echo esc_html(I18n::t('position')); ?></label>
                     <select id="cat_tail_bottom_position" class="ims-control" name="<?php echo esc_attr(self::OPTION_KEY); ?>[insertion_position]">
                       <?php foreach ($pos as $val => $label): ?>
                         <option value="<?php echo esc_attr($val); ?>" <?php selected($o['insertion_position'], $val); ?>>
@@ -156,7 +156,7 @@ class Settings {
                         </option>
                       <?php endforeach; ?>
                     </select>
-                    <p class="ims-mini-card__help">Methode utilisee par <code>insertAdjacentElement</code>.</p>
+                    <p class="ims-mini-card__help"><?php echo esc_html(I18n::t('position_help')); ?></p>
                   </div>
                 </div>
               </div>
@@ -168,42 +168,42 @@ class Settings {
                   <span class="ims-icon" aria-hidden="true">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                   </span>
-                  Espacements
+                  <?php echo esc_html(I18n::t('spacings')); ?>
                 </div>
               </div>
               <div class="ims-card__body">
-                <p class="ims-section-label">Bloc haut</p>
+                <p class="ims-section-label"><?php echo esc_html(I18n::t('slot_top')); ?></p>
                 <div class="ims-subgrid ims-subgrid--compact">
                   <div class="ims-mini-card">
-                    <label class="ims-mini-card__label" for="cat_tail_top_margin_mobile">Margin bottom mobile (px)</label>
+                    <label class="ims-mini-card__label" for="cat_tail_top_margin_mobile"><?php echo esc_html(I18n::t('top_margin_bottom_mobile')); ?></label>
                     <input id="cat_tail_top_margin_mobile" type="number" min="0" step="1" class="ims-control"
                            name="<?php echo esc_attr(self::OPTION_KEY); ?>[top_margin_bottom_mobile]"
                            value="<?php echo esc_attr($o['top_margin_bottom_mobile']); ?>">
                   </div>
                   <div class="ims-mini-card">
-                    <label class="ims-mini-card__label" for="cat_tail_top_margin_desktop">Margin bottom desktop (px)</label>
+                    <label class="ims-mini-card__label" for="cat_tail_top_margin_desktop"><?php echo esc_html(I18n::t('top_margin_bottom_desktop')); ?></label>
                     <input id="cat_tail_top_margin_desktop" type="number" min="0" step="1" class="ims-control"
                            name="<?php echo esc_attr(self::OPTION_KEY); ?>[top_margin_bottom_desktop]"
                            value="<?php echo esc_attr($o['top_margin_bottom_desktop']); ?>">
                   </div>
                 </div>
 
-                <p class="ims-section-label">Bloc bas</p>
+                <p class="ims-section-label"><?php echo esc_html(I18n::t('slot_bottom')); ?></p>
                 <div class="ims-subgrid ims-subgrid--compact">
                   <div class="ims-mini-card">
-                    <label class="ims-mini-card__label" for="cat_tail_mb">Margin bottom (px)</label>
+                    <label class="ims-mini-card__label" for="cat_tail_mb"><?php echo esc_html(I18n::t('bottom_margin_bottom')); ?></label>
                     <input id="cat_tail_mb" type="number" min="0" step="1" class="ims-control"
                            name="<?php echo esc_attr(self::OPTION_KEY); ?>[margin_bottom]"
                            value="<?php echo esc_attr($o['margin_bottom']); ?>">
                   </div>
                   <div class="ims-mini-card">
-                    <label class="ims-mini-card__label" for="cat_tail_bottom_margin_mobile">Margin top mobile (px)</label>
+                    <label class="ims-mini-card__label" for="cat_tail_bottom_margin_mobile"><?php echo esc_html(I18n::t('bottom_margin_top_mobile')); ?></label>
                     <input id="cat_tail_bottom_margin_mobile" type="number" min="0" step="1" class="ims-control"
                            name="<?php echo esc_attr(self::OPTION_KEY); ?>[margin_top_mobile]"
                            value="<?php echo esc_attr($o['margin_top_mobile']); ?>">
                   </div>
                   <div class="ims-mini-card">
-                    <label class="ims-mini-card__label" for="cat_tail_bottom_margin_desktop">Margin top desktop (px)</label>
+                    <label class="ims-mini-card__label" for="cat_tail_bottom_margin_desktop"><?php echo esc_html(I18n::t('bottom_margin_top_desktop')); ?></label>
                     <input id="cat_tail_bottom_margin_desktop" type="number" min="0" step="1" class="ims-control"
                            name="<?php echo esc_attr(self::OPTION_KEY); ?>[margin_top_desktop]"
                            value="<?php echo esc_attr($o['margin_top_desktop']); ?>">
@@ -213,7 +213,7 @@ class Settings {
             </div>
 
             <div style="margin-top:16px;">
-              <?php submit_button(__('Enregistrer', 'cat-tail')); ?>
+              <?php submit_button(I18n::t('save')); ?>
             </div>
           </form>
         </div>

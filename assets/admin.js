@@ -8,9 +8,9 @@
 
     function getSlotLabel(slot) {
         if (slot === "top") {
-            return (CatTailAdmin.strings && CatTailAdmin.strings.slot_top) || "Bloc haut";
+            return (CatTailAdmin.strings && CatTailAdmin.strings.slot_top) || "Top block";
         }
-        return (CatTailAdmin.strings && CatTailAdmin.strings.slot_bottom) || "Bloc bas";
+        return (CatTailAdmin.strings && CatTailAdmin.strings.slot_bottom) || "Bottom block";
     }
 
     function openModal(termId, slot) {
@@ -24,8 +24,9 @@
         $results.empty();
         $confirm.prop("disabled", true);
         $search.val("");
+        $search.attr("placeholder", (CatTailAdmin.strings && CatTailAdmin.strings.search_ph) || "Search a section...");
 
-        var baseTitle = (CatTailAdmin.strings && CatTailAdmin.strings.modal_title) || "Associer une section Elementor";
+        var baseTitle = (CatTailAdmin.strings && CatTailAdmin.strings.modal_title) || "Link an Elementor section";
         $title.text(baseTitle + " - " + getSlotLabel(currentSlot));
 
         $overlay.show();
@@ -55,9 +56,10 @@
     }
 
     function showLoadMore(nextPage) {
+        var moreLabel = (CatTailAdmin.strings && CatTailAdmin.strings.load_more) || "More...";
         var $more = $('<button type="button" class="button cat-tail-more" />')
             .attr("data-next", nextPage)
-            .text("Plus...");
+            .text(moreLabel);
         $results.append($more);
     }
 
@@ -116,10 +118,10 @@
             if (res && res.success) {
                 window.location.reload();
             } else {
-                alert("Erreur lors de la liaison.");
+                alert((CatTailAdmin.strings && CatTailAdmin.strings.assign_error) || "An error occurred while linking.");
             }
         }).fail(function () {
-            alert("Erreur lors de la liaison.");
+            alert((CatTailAdmin.strings && CatTailAdmin.strings.assign_error) || "An error occurred while linking.");
         }).always(function () {
             $confirm.prop("disabled", false);
         });

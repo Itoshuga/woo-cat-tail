@@ -25,7 +25,7 @@ class Admin {
     }
 
     private function get_slot_label(string $slot): string {
-        return $slot === 'top' ? __('Bloc haut', 'cat-tail') : __('Bloc bas', 'cat-tail');
+        return $slot === 'top' ? I18n::t('slot_top') : I18n::t('slot_bottom');
     }
 
     private function get_slot_meta_key(string $slot): string {
@@ -33,7 +33,7 @@ class Admin {
     }
 
     private function get_template_prefix(string $slot): string {
-        return $slot === 'top' ? 'Haut de categorie : ' : 'Bas de categorie : ';
+        return $slot === 'top' ? I18n::t('prefix_top') : I18n::t('prefix_bottom');
     }
 
     private function screen_is_product_cat(): bool {
@@ -73,14 +73,16 @@ class Admin {
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce'    => wp_create_nonce('cat_tail_admin_nonce'),
             'strings'  => [
-                'modal_title' => __('Associer une section Elementor', 'cat-tail'),
-                'search_ph'   => __('Rechercher une section...', 'cat-tail'),
-                'loading'     => __('Chargement...', 'cat-tail'),
-                'no_results'  => __('Aucun resultat', 'cat-tail'),
-                'confirm'     => __('Relier cette section', 'cat-tail'),
-                'cancel'      => __('Annuler', 'cat-tail'),
-                'slot_top'    => __('Bloc haut', 'cat-tail'),
-                'slot_bottom' => __('Bloc bas', 'cat-tail'),
+                'modal_title'  => I18n::t('modal_title'),
+                'search_ph'    => I18n::t('modal_search_placeholder'),
+                'loading'      => I18n::t('loading'),
+                'no_results'   => I18n::t('no_results'),
+                'confirm'      => I18n::t('confirm_link_section'),
+                'cancel'       => I18n::t('cancel'),
+                'slot_top'     => I18n::t('slot_top'),
+                'slot_bottom'  => I18n::t('slot_bottom'),
+                'load_more'    => I18n::t('load_more'),
+                'assign_error' => I18n::t('assign_error'),
             ]
         ]);
     }
@@ -92,9 +94,21 @@ class Admin {
         }
 
         $name = (string) $post->post_title;
-        $prefix = $this->get_template_prefix($slot);
-        if (stripos($name, $prefix) === 0) {
-            $name = substr($name, strlen($prefix));
+        $prefix_key = $slot === 'top' ? 'prefix_top' : 'prefix_bottom';
+        $prefixes = I18n::variants($prefix_key);
+        if ($slot === 'top') {
+            $prefixes[] = 'Haut de categorie : ';
+            $prefixes[] = 'Haut de catégorie : ';
+        } else {
+            $prefixes[] = 'Bas de categorie : ';
+            $prefixes[] = 'Bas de catégorie : ';
+        }
+
+        foreach (array_values(array_unique($prefixes)) as $prefix) {
+            if (stripos($name, $prefix) === 0) {
+                $name = substr($name, strlen($prefix));
+                break;
+            }
         }
         return $name;
     }
@@ -143,27 +157,27 @@ class Admin {
               <?php echo esc_html($slot_label); ?>
             </div>
             <span class="ims-badge <?php echo $template_id ? 'ims-badge--ok' : 'ims-badge--empty'; ?>">
-              <?php echo $template_id ? esc_html__('Lie', 'cat-tail') : esc_html__('Non lie', 'cat-tail'); ?>
+              <?php echo $template_id ? esc_html(I18n::t('status_linked')) : esc_html(I18n::t('status_not_linked')); ?>
             </span>
           </div>
 
           <div class="ims-card__body">
             <div class="ims-subgrid ims-subgrid--compact">
               <div class="ims-mini-card">
-                <p class="ims-mini-card__label"><?php esc_html_e('Modele lie', 'cat-tail'); ?></p>
+                <p class="ims-mini-card__label"><?php echo esc_html(I18n::t('template_linked')); ?></p>
                 <?php if ($template_id): ?>
                   <code class="ims-pill">
                     <?php echo esc_html($template_name); ?> #<?php echo (int) $template_id; ?>
                   </code>
                 <?php else: ?>
-                  <p class="ims-mini-card__help"><?php esc_html_e('Aucun modele associe pour ce slot.', 'cat-tail'); ?></p>
+                  <p class="ims-mini-card__help"><?php echo esc_html(I18n::t('no_template_linked')); ?></p>
                 <?php endif; ?>
               </div>
 
               <div class="ims-mini-card">
-                <p class="ims-mini-card__label"><?php esc_html_e('Position de rendu', 'cat-tail'); ?></p>
+                <p class="ims-mini-card__label"><?php echo esc_html(I18n::t('render_position')); ?></p>
                 <p class="ims-mini-value">
-                  <?php echo $slot === 'top' ? esc_html__('Au-dessus de la boucle produits', 'cat-tail') : esc_html__('Sous la boucle produits', 'cat-tail'); ?>
+                  <?php echo $slot === 'top' ? esc_html(I18n::t('render_position_top')) : esc_html(I18n::t('render_position_bottom')); ?>
                 </p>
               </div>
             </div>
@@ -172,30 +186,30 @@ class Admin {
           <div class="ims-card__actions">
             <?php if ($template_id): ?>
               <a class="button button-primary ims-btn" href="<?php echo esc_url(admin_url('post.php?post=' . $template_id . '&action=elementor')); ?>">
-                <?php esc_html_e('Modifier avec Elementor', 'cat-tail'); ?>
+                <?php echo esc_html(I18n::t('edit_with_elementor')); ?>
               </a>
 
               <button type="button"
                       class="button ims-btn button-secondary ims-open-replace-modal"
                       data-term="<?php echo esc_attr($term_id); ?>"
                       data-slot="<?php echo esc_attr($slot); ?>">
-                <?php esc_html_e('Remplacer / Associer un autre', 'cat-tail'); ?>
+                <?php echo esc_html(I18n::t('replace_or_assign')); ?>
               </button>
 
               <a class="button ims-btn ims-btn--ghost" href="<?php echo esc_url($detach_url); ?>"
-                 onclick="return confirm('<?php echo esc_attr__('Dissocier ce modele ?', 'cat-tail'); ?>');">
-                <?php esc_html_e('Dissocier', 'cat-tail'); ?>
+                 onclick="return confirm('<?php echo esc_attr(I18n::t('detach_confirm')); ?>');">
+                <?php echo esc_html(I18n::t('detach')); ?>
               </a>
             <?php else: ?>
               <a class="button button-primary ims-btn" href="<?php echo esc_url($create_replace_url); ?>">
-                <?php esc_html_e('Creer & modifier avec Elementor', 'cat-tail'); ?>
+                <?php echo esc_html(I18n::t('create_edit_with_elementor')); ?>
               </a>
 
               <button type="button"
                       class="button ims-btn button-secondary ims-open-replace-modal"
                       data-term="<?php echo esc_attr($term_id); ?>"
                       data-slot="<?php echo esc_attr($slot); ?>">
-                <?php esc_html_e('Associer un existant', 'cat-tail'); ?>
+                <?php echo esc_html(I18n::t('link_existing')); ?>
               </button>
             <?php endif; ?>
           </div>
@@ -212,7 +226,7 @@ class Admin {
         $opts = \CatTail\Settings::get_options();
         ?>
         <tr class="form-field">
-          <th scope="row"><label><?php esc_html_e('Woo Cat Tail', 'cat-tail'); ?></label></th>
+          <th scope="row"><label><?php echo esc_html(I18n::t('plugin_name')); ?></label></th>
           <td>
             <div class="ims-bento">
               <?php $this->render_slot_card($term_id, 'top'); ?>
@@ -224,18 +238,18 @@ class Admin {
                     <span class="ims-icon" aria-hidden="true">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     </span>
-                    <?php esc_html_e('Rappel insertion', 'cat-tail'); ?>
+                    <?php echo esc_html(I18n::t('insertion_reminder')); ?>
                   </div>
                 </div>
                 <div class="ims-card__body">
                   <div class="ims-subgrid ims-subgrid--compact">
                     <div class="ims-mini-card">
-                      <p class="ims-mini-card__label"><?php esc_html_e('Bloc haut', 'cat-tail'); ?></p>
+                      <p class="ims-mini-card__label"><?php echo esc_html(I18n::t('slot_top')); ?></p>
                       <code class="ims-pill"><?php echo esc_html($opts['top_insertion_selector']); ?></code>
                       <p class="ims-mini-card__help"><?php echo esc_html($opts['top_insertion_position']); ?></p>
                     </div>
                     <div class="ims-mini-card">
-                      <p class="ims-mini-card__label"><?php esc_html_e('Bloc bas', 'cat-tail'); ?></p>
+                      <p class="ims-mini-card__label"><?php echo esc_html(I18n::t('slot_bottom')); ?></p>
                       <code class="ims-pill"><?php echo esc_html($opts['insertion_selector']); ?></code>
                       <p class="ims-mini-card__help"><?php echo esc_html($opts['insertion_position']); ?></p>
                     </div>
@@ -244,7 +258,7 @@ class Admin {
                 <?php if (!is_wp_error($view_url)): ?>
                   <div class="ims-card__actions">
                     <a class="button ims-btn ims-btn--view" target="_blank" rel="noopener" href="<?php echo esc_url($view_url); ?>">
-                      <?php esc_html_e('Voir la page categorie', 'cat-tail'); ?>
+                      <?php echo esc_html(I18n::t('view_category_page')); ?>
                     </a>
                   </div>
                 <?php endif; ?>
@@ -259,21 +273,21 @@ class Admin {
                 <div id="cat-tail-modal-overlay" style="display:none;">
                   <div id="cat-tail-modal" role="dialog" aria-modal="true" aria-labelledby="cat-tail-modal-title">
                     <div class="cat-tail-modal__header">
-                      <h2 id="cat-tail-modal-title"><?php echo esc_html__('Associer une section Elementor', 'cat-tail'); ?></h2>
-                      <button type="button" class="cat-tail-modal__close" aria-label="<?php echo esc_attr__('Fermer', 'cat-tail'); ?>">&times;</button>
+                      <h2 id="cat-tail-modal-title"><?php echo esc_html(I18n::t('modal_title')); ?></h2>
+                      <button type="button" class="cat-tail-modal__close" aria-label="<?php echo esc_attr(I18n::t('close')); ?>">&times;</button>
                     </div>
 
                     <div class="cat-tail-modal__body">
                       <div class="ims-mini-card ims-mini-card--search">
-                        <label class="ims-mini-card__label" for="cat-tail-search"><?php esc_html_e('Recherche de section', 'cat-tail'); ?></label>
-                        <input type="text" id="cat-tail-search" placeholder="<?php echo esc_attr__('Rechercher une section...', 'cat-tail'); ?>" />
+                        <label class="ims-mini-card__label" for="cat-tail-search"><?php echo esc_html(I18n::t('search_section_label')); ?></label>
+                        <input type="text" id="cat-tail-search" placeholder="<?php echo esc_attr(I18n::t('modal_search_placeholder')); ?>" />
                       </div>
                       <div id="cat-tail-results" class="cat-tail-results"></div>
                     </div>
 
                     <div class="cat-tail-modal__footer">
-                      <button type="button" class="button button-secondary cat-tail-cancel"><?php echo esc_html__('Annuler', 'cat-tail'); ?></button>
-                      <button type="button" class="button button-primary cat-tail-confirm" disabled><?php echo esc_html__('Relier cette section', 'cat-tail'); ?></button>
+                      <button type="button" class="button button-secondary cat-tail-cancel"><?php echo esc_html(I18n::t('cancel')); ?></button>
+                      <button type="button" class="button button-primary cat-tail-confirm" disabled><?php echo esc_html(I18n::t('confirm_link_section')); ?></button>
                     </div>
                   </div>
                 </div>
@@ -346,7 +360,7 @@ class Admin {
         check_ajax_referer('cat_tail_admin_nonce', 'nonce');
 
         if (!current_user_can('edit_posts')) {
-            wp_send_json_error(['message' => 'Unauthorized'], 403);
+            wp_send_json_error(['message' => I18n::t('unauthorized')], 403);
         }
 
         $search = isset($_POST['search']) ? sanitize_text_field(wp_unslash($_POST['search'])) : '';
@@ -392,7 +406,7 @@ class Admin {
         check_ajax_referer('cat_tail_admin_nonce', 'nonce');
 
         if (!current_user_can('edit_posts')) {
-            wp_send_json_error(['message' => 'Unauthorized'], 403);
+            wp_send_json_error(['message' => I18n::t('unauthorized')], 403);
         }
 
         $term_id     = (int) ($_POST['term_id'] ?? 0);
@@ -400,12 +414,12 @@ class Admin {
         $slot        = $this->sanitize_slot((string) ($_POST['slot'] ?? 'bottom'));
 
         if ($term_id <= 0 || $template_id <= 0) {
-            wp_send_json_error(['message' => 'Bad request'], 400);
+            wp_send_json_error(['message' => I18n::t('bad_request')], 400);
         }
 
         $is_section = get_post_meta($template_id, '_elementor_template_type', true) === 'section';
         if (!$is_section) {
-            wp_send_json_error(['message' => 'Not a section template'], 400);
+            wp_send_json_error(['message' => I18n::t('not_section_template')], 400);
         }
 
         update_term_meta($term_id, $this->get_slot_meta_key($slot), $template_id);

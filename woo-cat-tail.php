@@ -20,6 +20,7 @@ define('CAT_TAIL_META_KEY_BOTTOM', '_ims_bottom_elementor_template_id');
 define('CAT_TAIL_META_KEY', CAT_TAIL_META_KEY_BOTTOM);
 
 require_once CAT_TAIL_DIR . 'includes/Frontend.php';
+require_once CAT_TAIL_DIR . 'includes/I18n.php';
 require_once CAT_TAIL_DIR . 'includes/Admin.php';
 require_once CAT_TAIL_DIR . 'includes/Settings.php';
 
@@ -35,6 +36,6 @@ add_action('plugins_loaded', function () {
 
 add_filter('plugin_action_links_' . plugin_basename(__FILE__), function ($links) {
     $settings_url = admin_url('admin.php?page=woo-cat-tail');
-    array_unshift($links, '<a href="' . esc_url($settings_url) . '">' . esc_html__('Reglages', 'cat-tail') . '</a>');
+    array_unshift($links, '<a href="' . esc_url($settings_url) . '">' . esc_html(\CatTail\I18n::t('settings_link')) . '</a>');
     return $links;
 });
